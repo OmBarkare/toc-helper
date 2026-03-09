@@ -1,4 +1,4 @@
-use std::{default, fs, io::Read};
+use std::{collections::HashMap, fs};
 
 #[derive(Debug)]
 struct FiniteAutomata {
@@ -27,6 +27,9 @@ fn main() {
     let mut line;
     let mut section;
     let mut finiteAutomata = FiniteAutomata::init();
+    let mut state_index: HashMap<String, u32> = HashMap::new();
+    let mut alphabet_index: HashMap<String, u32> = HashMap::new();
+
     loop {
         line = lines.next().unwrap().split(" ");
         section = line.next().unwrap();
@@ -36,16 +39,22 @@ fn main() {
         match section {
             "alphabets:" => {
                 println!("{}", section);
+                let mut i: u32 = 0;
                 for element in line {
                     println!("{:?}", element);
                     finiteAutomata.alphabets.push(element.to_string());
+                    alphabet_index.insert(element.to_string(), i);
+                    i += 1;
                 }
             }
             "states:" => {
                 println!("{}", section);
+                let mut i: u32 = 0;
                 for element in line {
                     println!("{:?}", element);
                     finiteAutomata.states.push(element.to_string());
+                    state_index.insert(element.to_string(), i);
+                    i += 1;
                 }
             }
             "initial:" => {
@@ -57,6 +66,21 @@ fn main() {
             }
             "transition:" => {
                 println!("in transition");
+                finiteAutomata
+                    .transition
+                    .resize(state_index.len(), vec![String::new(); alphabet_index.len()]);
+                loop {
+                    let str = lines.next().unwrap().trim();
+                    if str == "end_transition" {
+                        break;
+                    }
+                    line = str.split(" ");
+                    let curr_state_idx: usize = state_index[line.next().unwrap()] as usize;
+                    let curr_alphabet_index: usize = alphabet_index[line.next().unwrap()] as usize;
+                    finiteAutomata.transition[curr_state_idx][curr_alphabet_index] =
+                        line.next().unwrap().to_string();
+                    println!("{:?}", line);
+                }
             }
             "final:" => {
                 println!("{}", section);
@@ -68,10 +92,10 @@ fn main() {
             "end" => {
                 break;
             }
-            default => {
+            _default => {
                 print!("this is the section ->{}", section);
             }
         }
     }
-    println!("{:?}", finiteAutomata);
+    println!("{:#?}", finiteAutomata);
 }
