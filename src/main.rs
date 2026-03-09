@@ -31,7 +31,7 @@ fn main() {
     let mut alphabet_index: HashMap<String, u32> = HashMap::new();
 
     loop {
-        line = lines.next().unwrap().split(" ");
+        line = lines.next().unwrap().trim().split(" ");
         section = line.next().unwrap();
         // if section == "end" {
         //     break;
