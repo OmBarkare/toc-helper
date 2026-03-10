@@ -19,6 +19,79 @@ impl FiniteAutomata {
             accept: Vec::new(),
         }
     }
+
+    fn minimise(&self, state_index: HashMap<String, u32>, alphabet_index: HashMap<String, u32>) {
+
+        // setup ------------------------
+
+        //current nmuber of equivalence classes
+        let num_eclass: u32 = 2;
+        let mut eclass: HashMap<String, u32> = HashMap::new();
+        let mut equivalent = false;
+
+        // to compare equivalance of two states
+        let mut v1: Vec<u32> = Vec::new();
+        let mut v2: Vec<u32> = Vec::new();
+
+        // splitting final and non-final states
+        for element in &self.states {
+            if self.accept.contains(element) {
+                eclass.insert(element.to_string(), 1);
+            } else {
+                eclass.insert(element.to_string(), 0);
+            }
+        }
+        let mut temp_eclass: HashMap<String, u32> = HashMap::new();
+
+        // main minimisation loop ---------------------------
+
+        loop {
+
+            // break if previous class was same
+            if eclass == temp_eclass {
+                break;
+            }
+
+            // check equivalance of all elements, and put elements in respective class.
+            // this is like performing one step of making separate classes
+            for element1 in &self.states {
+                // building v1 to compare equivalance
+                for alphabet in &self.alphabets {
+                    // for each transition for current element,
+                    // we push the equivalance-class-index of the state at which we arrived after this transition
+                    if self.transition[state_index[element1] as usize][alphabet_index[alphabet] as usize] != "" {
+                        v1.push(
+                            eclass[&self.transition[state_index[element1] as usize][alphabet_index[alphabet] as usize]],
+                        );
+                    }
+                }
+
+                for element2 in &self.states {
+                    for alphabet in &self.alphabets {
+                        println!("eclasss -> {:#?}", eclass);
+                        println!("trying to access for {}, {}", element2, alphabet);
+                        if self.transition[state_index[element2] as usize][alphabet_index[alphabet] as usize] != "" {
+                            v2.push(
+                                eclass[&self.transition[state_index[element2] as usize][alphabet_index[alphabet] as usize]],
+                            );
+                        }
+                    }
+                    if v2 == v1 {
+                        equivalent = false;
+                        eclass.insert(element2.to_string(), eclass[element1]);
+                    }
+                    v2.clear();
+                }
+
+                // checking equivalance with all elements after the current element
+                // reseting v1
+                v1.clear();
+            }
+            temp_eclass = eclass.clone();
+        }
+
+        println!("eclasss -> {:#?}", eclass); //debug
+    }
 }
 fn main() {
     let config = fs::read_to_string("config.txt").expect("failed to read config file");
@@ -32,7 +105,7 @@ fn main() {
     // when a line contains a section heading, we will call next and store the section heading here
     // this way we know which section we are in
     let mut section;
-    
+
     // this is where we will parse and store the finite automata
     let mut finiteAutomata = FiniteAutomata::init();
 
@@ -51,7 +124,7 @@ fn main() {
         match section {
             "alphabets:" => {
                 println!("{}", section); // debug
-                
+
                 let mut i: u32 = 0; // to index alphabets
                 for element in line {
                     println!("{:?}", element);
@@ -112,4 +185,5 @@ fn main() {
         }
     }
     println!("{:#?}", finiteAutomata);
+    finiteAutomata.minimise(state_index, alphabet_index);
 }
