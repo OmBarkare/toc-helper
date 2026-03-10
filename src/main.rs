@@ -22,24 +22,37 @@ impl FiniteAutomata {
 }
 fn main() {
     let config = fs::read_to_string("config.txt").expect("failed to read config file");
+
+    // iterator over lines of the txt file
     let mut lines = config.split("\n");
 
+    // to iterate over elements in one line
     let mut line;
+
+    // when a line contains a section heading, we will call next and store the section heading here
+    // this way we know which section we are in
     let mut section;
+    
+    // this is where we will parse and store the finite automata
     let mut finiteAutomata = FiniteAutomata::init();
+
+    // hashmaps to map all states and alphabets to a index
     let mut state_index: HashMap<String, u32> = HashMap::new();
     let mut alphabet_index: HashMap<String, u32> = HashMap::new();
 
     loop {
+        // get a line and separate elements in a line at whitespaces
         line = lines.next().unwrap().trim().split(" ");
+
+        // first element in each line is the section
         section = line.next().unwrap();
-        // if section == "end" {
-        //     break;
-        // }
+
+        // build finiteAutomata according to sections
         match section {
             "alphabets:" => {
-                println!("{}", section);
-                let mut i: u32 = 0;
+                println!("{}", section); // debug
+                
+                let mut i: u32 = 0; // to index alphabets
                 for element in line {
                     println!("{:?}", element);
                     finiteAutomata.alphabets.push(element.to_string());
@@ -48,8 +61,9 @@ fn main() {
                 }
             }
             "states:" => {
-                println!("{}", section);
-                let mut i: u32 = 0;
+                println!("{}", section); // debug
+
+                let mut i: u32 = 0; // to index states
                 for element in line {
                     println!("{:?}", element);
                     finiteAutomata.states.push(element.to_string());
@@ -79,13 +93,13 @@ fn main() {
                     let curr_alphabet_index: usize = alphabet_index[line.next().unwrap()] as usize;
                     finiteAutomata.transition[curr_state_idx][curr_alphabet_index] =
                         line.next().unwrap().to_string();
-                    println!("{:?}", line);
+                    println!("{:#?}", line);
                 }
             }
             "final:" => {
                 println!("{}", section);
                 for element in line {
-                    println!("{:?}", element);
+                    println!("{:#?}", element);
                     finiteAutomata.accept.push(element.to_string());
                 }
             }
