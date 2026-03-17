@@ -1,8 +1,10 @@
 use std::{
+    clone,
     collections::{BTreeMap, BTreeSet, HashMap, btree_map::Keys},
     fs,
     hash::Hash,
     io::BufRead,
+    os::linux::raw::stat,
 };
 
 #[derive(Debug)]
@@ -37,7 +39,7 @@ impl FiniteAutomata {
         e_classes.push(BTreeSet::new());
         let mut track_all: HashMap<String, u32> = HashMap::new();
 
-        // removing unreachable states
+        // removing unreachable states TODO
 
         // splitting final and non-final states and initializing track
         for element in &self.states {
@@ -64,7 +66,7 @@ impl FiniteAutomata {
                 for s in class {
                     track_class.insert(s.clone(), -1);
                 }
-                
+
                 //first element loop
                 for (i, element) in class.iter().enumerate() {
                     if track_class[element] == -1 {
@@ -128,6 +130,54 @@ impl FiniteAutomata {
                 }
             }
         }
+
+        // ---------------------------- BUILDING DFA OBJECT ------------------------------------------
+
+        let mut minimisedAutomata = FiniteAutomata::init();
+        let mut state = String::from("A");
+        let mut class_to_state: HashMap<&BTreeSet<String>, String> = HashMap::new();
+
+        // make mapping of equivalance classes to new "state"
+        for class in &e_classes {
+            class_to_state.insert(class, state.clone());
+
+            let char_as_u8 = state.chars().next().unwrap() as u8 + 1;
+            state = (char_as_u8 as char).to_string();
+        }
+
+        // final states
+        for class in &e_classes {
+            for state in &self.accept {
+                if class.contains(state) {
+                    minimisedAutomata.accept.push(class_to_state[class].clone());
+                    break;
+                }
+            }
+        }
+
+        // transition
+        for class in &e_classes {
+            let curr_state = class_to_state[class].clone();
+            let mut hmap: HashMap<String, String> = HashMap::new();
+
+            for alphabet in &self.alphabets {            
+                let first_state = class.iter().next().unwrap();
+                let dest_state = &self.transition[first_state][alphabet];
+
+                // finding which e_class contains the transition to first_state
+                let dest_class = e_classes
+                    .iter()
+                    .find(|c| c.contains(dest_state))
+                    .expect("Destination state not found in any class!");
+
+                let new_state = class_to_state[dest_class].clone();
+
+                hmap.insert(alphabet.clone(), new_state);
+            }
+
+            minimisedAutomata.transition.insert(curr_state, hmap);
+        }
+        println!("{:#?}", minimisedAutomata.transition);
     }
 }
 
