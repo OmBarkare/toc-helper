@@ -28,7 +28,7 @@ impl FiniteAutomata {
     }
 
     // should return another FiniteAutomata struct
-    fn minimise(&self) {
+    fn minimise(&self) -> FiniteAutomata {
         // ----------------- SETUP -----------------
 
         // each index represents a equivalance set
@@ -195,6 +195,8 @@ impl FiniteAutomata {
         minimisedAutomata.initial = class_to_state[&initial_class].clone();
 
         println!("{:#?}", minimisedAutomata);
+
+        minimisedAutomata
     }
 }
 
@@ -296,6 +298,6 @@ fn main() {
             }
         }
     }
-    println!("{:#?}", finiteAutomata);
-    finiteAutomata.minimise();
+    let minimised = finiteAutomata.minimise();
+    println!("{:#?}", minimised);
 }
