@@ -141,9 +141,15 @@ impl FiniteAutomata {
         for class in &e_classes {
             class_to_state.insert(class, state.clone());
 
+            // also building states set
+            minimisedAutomata.states.push(state.clone());
+
             let char_as_u8 = state.chars().next().unwrap() as u8 + 1;
             state = (char_as_u8 as char).to_string();
         }
+
+        // alphabets same for initial and minimised automata
+        minimisedAutomata.alphabets = self.alphabets.clone();
 
         // final states
         for class in &e_classes {
@@ -177,7 +183,18 @@ impl FiniteAutomata {
 
             minimisedAutomata.transition.insert(curr_state, hmap);
         }
-        println!("{:#?}", minimisedAutomata.transition);
+        // println!("{:#?}", minimisedAutomata.transition);
+
+        // initial state
+        let initial_class = e_classes
+            .iter()
+            .find(|class| class.contains(&self.initial))
+            .unwrap()
+            .clone();
+
+        minimisedAutomata.initial = class_to_state[&initial_class].clone();
+
+        println!("{:#?}", minimisedAutomata);
     }
 }
 
