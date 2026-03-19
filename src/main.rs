@@ -39,10 +39,24 @@ impl FiniteAutomata {
         e_classes.push(BTreeSet::new());
         let mut track_all: HashMap<String, u32> = HashMap::new();
 
-        // removing unreachable states TODO
+        // removing unreachable states using DFS
+        let mut reachable: Vec<String> = Vec::new();
+        let mut stack: Vec<String> = Vec::new();
+        stack.push(self.initial.clone());
+        reachable.push(self.initial.clone());
 
+        while let Some(state) = stack.pop() {
+            let transition = &self.transition[&state];
+            for dest in transition.values() {
+                if !reachable.contains(dest) {
+                    stack.push(dest.clone());
+                    reachable.push(dest.clone());
+                }
+            }
+        }
+        
         // splitting final and non-final states and initializing track
-        for element in &self.states {
+        for element in &reachable {
             if self.accept.contains(element) {
                 e_classes[1].insert(element.clone());
                 track_all.insert(element.clone(), 1);
@@ -166,7 +180,7 @@ impl FiniteAutomata {
             let curr_state = class_to_state[class].clone();
             let mut hmap: HashMap<String, String> = HashMap::new();
 
-            for alphabet in &self.alphabets {            
+            for alphabet in &self.alphabets {
                 let first_state = class.iter().next().unwrap();
                 let dest_state = &self.transition[first_state][alphabet];
 
